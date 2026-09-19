@@ -23,6 +23,8 @@ $searches = @(
   [ordered]@{ name = "Oracle VBCS India"; query = '("Visual Builder Cloud Service" OR VBCS OR "Oracle Visual Builder") (India OR Bengaluru OR Hyderabad OR Pune OR Chennai OR Mumbai OR Gurugram) (jobs OR careers OR hiring)'; maxResults = 25 },
   [ordered]@{ name = "Oracle HCM India"; query = '("Oracle HCM" OR "HCM Cloud" OR "Oracle Fusion HCM") (India OR Bengaluru OR Hyderabad OR Pune OR Chennai OR Mumbai OR Gurugram) (jobs OR careers OR hiring)'; maxResults = 30 },
   [ordered]@{ name = "Oracle Cloud ATS India"; query = '(OIC OR OCI OR VBCS OR "Oracle HCM") (India OR Bengaluru OR Hyderabad OR Pune OR Chennai) (greenhouse OR lever OR workdayjobs OR smartrecruiters OR taleo OR successfactors)'; maxResults = 30 },
+  [ordered]@{ name = "Naukri Oracle Cloud India"; query = 'site:naukri.com (OIC OR OCI OR VBCS OR "Oracle HCM" OR "Oracle Fusion HCM") (Bengaluru OR Hyderabad OR Pune OR Chennai OR Mumbai OR Gurugram OR India)'; maxResults = 30 },
+  [ordered]@{ name = "Indeed Oracle Cloud India"; query = '(site:indeed.com OR site:in.indeed.com) (OIC OR OCI OR VBCS OR "Oracle HCM" OR "Oracle Fusion HCM") (Bengaluru OR Hyderabad OR Pune OR Chennai OR Mumbai OR Gurugram OR India)'; maxResults = 30 },
   [ordered]@{ name = "LinkedIn Oracle Cloud India"; query = 'site:linkedin.com/jobs/view (OIC OR OCI OR VBCS OR "Oracle HCM") (India OR Bengaluru OR Hyderabad OR Pune OR Chennai OR Remote)'; maxResults = 30 }
 )
 
