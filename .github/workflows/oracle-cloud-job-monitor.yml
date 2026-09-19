@@ -1,0 +1,48 @@
+name: Oracle Cloud Job Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: oracle-cloud-job-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Run Oracle Cloud ntfy monitor
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+      ROLEPILOT_MIN_YEARS: "2"
+      ROLEPILOT_NTFY_TOPIC: "https://ntfy.sh/oracle_integrations"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Oracle Cloud monitor
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File "work/job-monitor/run_oracle_cloud_monitor.ps1"
+
+      - name: Commit state changes
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "work/job-monitor/oracle-cloud-seen-jobs.json"
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { exit 0 }
+          git commit -m "Refresh Oracle Cloud job monitor state"
+          git push
