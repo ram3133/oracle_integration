@@ -9,6 +9,9 @@ $seenPath = Join-Path $stateDir "oracle-cloud-seen-jobs.json"
 $ntfyTopic = if ($env:ROLEPILOT_NTFY_TOPIC) { [string]$env:ROLEPILOT_NTFY_TOPIC } else { "https://ntfy.sh/oracle_integrations" }
 $minYears = if ($env:ROLEPILOT_MIN_YEARS) { [int]$env:ROLEPILOT_MIN_YEARS } else { 2 }
 $maxAlertsPerRun = 25
+$script:rawResults = 0
+$script:eligibleResults = 0
+$script:rejectedResults = 0
 
 $oracleSkills = @(
   @{ name = "Oracle Integration Cloud (OIC)"; pattern = 'oracle integration cloud|\boic\b|oracle integrations?' },
@@ -49,7 +52,7 @@ function Get-SkillMatches($text) {
 function Test-OracleCandidate($title, $link, $description) {
   $hay = "$title $link $description".ToLowerInvariant()
   if ($hay -match 'internship|\bintern\b|principal|director|manager|architect|training course|certification|question paper|walkin|walk-in|bpo|customer support|sales|account executive') { return $false }
-  if ($hay -notmatch 'india|bengaluru|bangalore|hyderabad|pune|chennai|mumbai|gurugram|noida|remote') { return $false }
+  # Every search query is India-scoped; job-board snippets frequently omit the city.
   if ((Get-SkillMatches $hay).Count -lt 1) { return $false }
   return $link -match 'linkedin\.com/jobs|greenhouse|lever\.co|myworkdayjobs|smartrecruiters|careers|jobs|job|naukri|indeed|foundit|instahyre|hirist|taleo|successfactors'
 }
@@ -65,9 +68,11 @@ function Get-SearchJobs($search) {
       $title = Normalize-Text $item.title
       $link = Normalize-Text $item.link
       $description = Normalize-Text $item.description
-      if (-not (Test-OracleCandidate $title $link $description)) { continue }
+      $script:rawResults += 1
+      if (-not (Test-OracleCandidate $title $link $description)) { $script:rejectedResults += 1; continue }
       $key = Canonical-Url $link
       if (-not $seen.Add($key)) { continue }
+      $script:eligibleResults += 1
       $jobs.Add([pscustomobject]@{ title = $title; link = $link; content = $description; source = $search.name })
       if ($jobs.Count -ge [int]$search.maxResults) { break }
     }
@@ -87,7 +92,9 @@ function Get-GoogleJobs($search) {
       $title = Normalize-Text $item.title
       $link = Normalize-Text $item.link
       $description = Normalize-Text $item.snippet
-      if (-not (Test-OracleCandidate $title $link $description)) { continue }
+      $script:rawResults += 1
+      if (-not (Test-OracleCandidate $title $link $description)) { $script:rejectedResults += 1; continue }
+      $script:eligibleResults += 1
       $jobs.Add([pscustomobject]@{ title = $title; link = $link; content = $description; source = $search.name })
     }
   } catch {
@@ -167,6 +174,9 @@ $state | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 -Path $seenPath
   relevantJobs = $jobs.Count
   newJobs = $newJobs.Count
   ntfyPosted = $posted
+  rawResults = $script:rawResults
+  eligibleSearchResults = $script:eligibleResults
+  rejectedSearchResults = $script:rejectedResults
   ntfyTopic = $ntfyTopic
   skills = @($oracleSkills.name)
 } | ConvertTo-Json -Depth 4
